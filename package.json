@@ -5,6 +5,7 @@
   "type": "module",
   "bin": { "brownout": "bin/brownout.mjs" },
   "scripts": { "test": "node --test" },
+  "files": ["bin", "lib", "demo/flows", "demo/verify", "demo/shop-naive", "demo/storms.json"],
   "engines": { "node": ">=20" },
   "license": "MIT",
   "dependencies": { "@testmuai/kane-cli": "0.10.4" }

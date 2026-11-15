@@ -2,3 +2,4 @@ runs/
 node_modules/
 *.log
 demo/shop/
+brownout-demo-shop/

@@ -22,7 +22,7 @@ if (!['run', 'demo'].includes(cmd)) { console.log(usage); process.exit(cmd ? 1 :
 
 let cfg;
 if (cmd === 'demo') {
-  const work = path.join(root, 'demo/shop'), pristine = path.join(root, 'demo/shop-naive');
+  const work = path.resolve('brownout-demo-shop'), pristine = path.join(root, 'demo/shop-naive');
   if (v.reset || !fs.existsSync(work)) { fs.rmSync(work, { recursive: true, force: true }); fs.cpSync(pristine, work, { recursive: true }); console.log('demo shop reset to the naive version'); }
   cfg = { app: 'node server.mjs', appDir: work, flows: path.join(root, 'demo/flows'), storms: path.join(root, 'demo/storms.json'), baseline: !v['no-baseline'], final: !v['no-final'] };
 } else {
@@ -31,7 +31,7 @@ if (cmd === 'demo') {
 }
 const ts = new Date().toISOString().replace(/[:.]/g, '-');
 Object.assign(cfg, { port: +v.port, appPort: +v['app-port'], agentCmd: v['agent-cmd'], maxTries: +v['max-tries'], only: v.only, fix: !v['no-fix'],
-  kanePrefix: v['no-mullvad'] ? [] : defaultPrefix(), kaneTimeout: +v['kane-timeout'], baselineFrom: v['baseline-from'] && path.resolve(v['baseline-from']), runDir: path.resolve(v['run-dir'] || path.join(root, 'runs', ts)) });
+  kanePrefix: v['no-mullvad'] ? [] : defaultPrefix(), kaneTimeout: +v['kane-timeout'], baselineFrom: v['baseline-from'] && path.resolve(v['baseline-from']), runDir: path.resolve(v['run-dir'] || path.join('runs', ts)) });
 fs.mkdirSync(cfg.runDir, { recursive: true });
 
 const storms = loadStorms(cfg.storms).filter((s) => !cfg.only || s.name === cfg.only);
