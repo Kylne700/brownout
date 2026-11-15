@@ -1,17 +1,72 @@
 [
-  { "name": "flaky-pay", "title": "payment endpoint fails twice, then works", "flow": "flaky-pay.txt",
-    "expect": "When POST /api/pay fails with a temporary error (HTTP 503) the app must retry with backoff (at least 3 attempts) and finish the purchase. The user must end on the text \"Order confirmed\".",
-    "faults": [ { "route": "/api/pay", "method": "POST", "calls": "1-2", "action": "status:503" } ] },
-  { "name": "lost-response", "title": "payment goes through but the answer never arrives", "flow": "lost-response.txt",
-    "expect": "When POST /api/pay is processed by the server but the response is lost, a retry or a second click must never create a second order. Use an idempotency key: the browser sends one key per purchase (header Idempotency-Key) and the server returns the same order for the same key. The user must see \"Order confirmed\" and the orders page must show exactly \"Orders: 1\".",
-    "faults": [ { "route": "/api/pay", "method": "POST", "calls": "1", "action": "drop-after-upstream" } ] },
-  { "name": "pay-down", "title": "payment is down for good", "flow": "pay-down.txt",
-    "expect": "When POST /api/pay keeps failing, the app must show a clear message that contains the words \"payment is unavailable\", must keep the item in the cart (the cart still lists the Mug), and must never show \"Order confirmed\".",
-    "faults": [ { "route": "/api/pay", "method": "POST", "calls": "all", "action": "status:503" } ] },
-  { "name": "slow-cart", "title": "cart answers after 12 seconds", "flow": "slow-cart.txt",
-    "expect": "When GET /api/cart is slow, the checkout page must never be blank. It must show a loading text (\"Loading your cart\") while it waits, and when the cart fails or times out it must show a message and a \"Try again\" button. When the cart arrives it must list the Mug.",
-    "faults": [ { "route": "/api/cart", "method": "GET", "calls": "1-2", "action": "delay:12000" } ] },
-  { "name": "html-error", "title": "product list answers with an HTML error page", "flow": "html-error.txt",
-    "expect": "When GET /api/products answers 200 with an HTML error page instead of JSON, the page must not be blank. It must show a readable error (\"Could not load the shop\") and a \"Reload\" button. The Reload button must fetch the products again.",
-    "faults": [ { "route": "/api/products", "method": "GET", "calls": "1", "action": "body:html-error" } ] }
+ {
+  "name": "flaky-pay",
+  "title": "payment endpoint fails twice, then works",
+  "flow": "flaky-pay.txt",
+  "expect": "When POST /api/pay fails with a temporary error (HTTP 503) the app must retry with backoff (at least 3 attempts) and finish the purchase. The user must end on the text \"Order confirmed\".",
+  "faults": [
+   {
+    "route": "/api/pay",
+    "method": "POST",
+    "calls": "1-2",
+    "action": "status:503"
+   }
+  ]
+ },
+ {
+  "name": "lost-response",
+  "title": "payment goes through but the answer never arrives",
+  "flow": "lost-response.txt",
+  "expect": "When POST /api/pay is processed by the server but the response is lost, a retry or a second click must never create a second order. Use an idempotency key: the browser sends one key per purchase (header Idempotency-Key) and the server returns the same order for the same key. The user must see \"Order confirmed\" and the orders page must show exactly \"Orders: 1\".",
+  "faults": [
+   {
+    "route": "/api/pay",
+    "method": "POST",
+    "calls": "1",
+    "action": "drop-after-upstream"
+   }
+  ]
+ },
+ {
+  "name": "pay-down",
+  "title": "payment is down for good",
+  "flow": "pay-down.txt",
+  "expect": "When POST /api/pay keeps failing, the app must show a clear message that contains the words \"payment is unavailable\", must keep the item in the cart (the cart still lists the Mug), and must never show \"Order confirmed\".",
+  "faults": [
+   {
+    "route": "/api/pay",
+    "method": "POST",
+    "calls": "all",
+    "action": "status:503"
+   }
+  ]
+ },
+ {
+  "name": "slow-cart",
+  "title": "cart answers after 12 seconds",
+  "flow": "slow-cart.txt",
+  "expect": "When GET /api/cart is slow, the checkout page must never be blank. It must show a loading text (\"Loading your cart\") while it waits, and when the cart fails or times out it must show a message and a \"Try again\" button. When the cart arrives it must list the Mug.",
+  "faults": [
+   {
+    "route": "/api/cart",
+    "method": "GET",
+    "calls": "1-2",
+    "action": "delay:12000"
+   }
+  ]
+ },
+ {
+  "name": "html-error",
+  "title": "product list answers with an HTML error page",
+  "flow": "html-error.txt",
+  "expect": "When GET /api/products answers 200 with an HTML error page instead of JSON (every time), the page must not be blank. It must show a readable error message (for example \"Could not load the shop\") and a \"Reload\" button that fetches the products again.",
+  "faults": [
+   {
+    "route": "/api/products",
+    "method": "GET",
+    "calls": "all",
+    "action": "body:html-error"
+   }
+  ]
+ }
 ]
