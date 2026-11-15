@@ -11,7 +11,8 @@
     "calls": "1-2",
     "action": "status:503"
    }
-  ]
+  ],
+  "verify": "node verify/orders.mjs 1"
  },
  {
   "name": "lost-response",
@@ -25,7 +26,8 @@
     "calls": "1",
     "action": "drop-after-upstream"
    }
-  ]
+  ],
+  "verify": "node verify/orders.mjs 1"
  },
  {
   "name": "pay-down",
@@ -39,7 +41,8 @@
     "calls": "all",
     "action": "status:503"
    }
-  ]
+  ],
+  "verify": "node verify/orders.mjs 0"
  },
  {
   "name": "slow-cart",

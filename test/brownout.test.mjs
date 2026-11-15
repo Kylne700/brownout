@@ -7,10 +7,11 @@ import path from 'node:path';
 import { createProxy, callMatcher, HTML_ERROR } from '../lib/proxy.mjs';
 import { parseNdjson } from '../lib/kane.mjs';
 import { buildEvidence, buildPrompt, describeFault, readFaultLog } from '../lib/evidence.mjs';
+import { runVerify, join } from '../lib/verify.mjs';
 import { parseAgentJson } from '../lib/agent.mjs';
 
 const get = (port, p, method = 'GET') => new Promise((res) => {
-  const r = http.request({ host: '127.0.0.1', port, path: p, method }, (x) => { let b = ''; x.on('data', (c) => (b += c)); x.on('end', () => res({ code: x.statusCode, body: b })); });
+  const r = http.request({ host: '127.0.0.1', port, path: p, method, agent: false }, (x) => { let b = ''; x.on('data', (c) => (b += c)); x.on('end', () => res({ code: x.statusCode, body: b })); });
   r.on('error', (e) => res({ error: e.code })); r.end();
 });
 async function withProxy(faults, fn) {
@@ -59,7 +60,7 @@ test('delay and html-error bodies', async () => {
   });
 });
 
-const runEnd = '{"type":"run_end","status":"failed","reason":"Payment failed shown","one_liner":"x","credits_consumed":15.4,"duration":45.9,"reason_code":"assertion_error.confirmed_product_bug","test_url":"https://example.invalid/x"}';
+const runEnd = '{"type":"run_end","status":"failed","reason":"Payment failed shown","one_liner":"x","credits_consumed":15.4,"duration":45.9,"reason_code":"assertion_error.confirmed_product_bug"}';
 test('parseNdjson: run_end and steps', () => {
   const text = ['{"type":"stream_start","v":1}', '{"step":2,"status":"running","remark":"Step 1"}', '{"step":2,"status":"done","remark":"click: Pay now"}', 'garbage', runEnd].join('\n');
   const r = parseNdjson(text);
@@ -93,4 +94,28 @@ test('parseAgentJson', () => {
   const a = parseAgentJson('{"result":"done","total_cost_usd":0.12,"num_turns":4,"usage":{"input_tokens":10,"output_tokens":5}}');
   assert.equal(a.cost, 0.12); assert.equal(a.tokensOut, 5);
   assert.equal(parseAgentJson('plain text').message, 'plain text');
+});
+
+test('verify join: green only when Kane and the app state agree; disagreement is flagged', () => {
+  const ok = { ok: true }, bad = { ok: false };
+  assert.deepEqual(join(true, null), { green: true, disagree: false }); // no verify command: Kane alone
+  assert.deepEqual(join(true, ok), { green: true, disagree: false });
+  assert.deepEqual(join(false, bad), { green: false, disagree: false });
+  assert.deepEqual(join(true, bad), { green: false, disagree: true }); // Kane blind to a double charge
+  assert.deepEqual(join(false, ok), { green: false, disagree: true });
+});
+
+test('runVerify: exit code, output and env reach the command; no command = null', () => {
+  assert.equal(runVerify({ name: 'x' }, { appPort: 1, cwd: '.' }), null);
+  const r = runVerify({ name: 'st', verify: 'echo "$BROWNOUT_STORM $BROWNOUT_APP_URL"' }, { appPort: 18765, cwd: '.' });
+  assert.deepEqual(r, { ok: true, code: 0, out: 'st http://127.0.0.1:18765' });
+  const f = runVerify({ name: 'x', verify: 'echo two orders >&2; exit 1' }, { appPort: 1, cwd: '.' });
+  assert.equal(f.ok, false); assert.equal(f.out, 'two orders');
+});
+
+test('evidence carries the verify result into the prompt', () => {
+  const kane = { status: 'passed', steps: [] };
+  const ev = buildEvidence({ storm: { name: 'x', expect: 'one order' }, kane, faults: [], flow: 'F', tryNo: 1, verify: { ok: false, code: 1, out: 'app holds 2 order(s), expected 1' } });
+  const p = buildPrompt(ev, '/app');
+  assert.ok(p.includes('FAILED') && p.includes('app holds 2 order(s)') && p.includes('Kane saw nothing wrong'));
 });
