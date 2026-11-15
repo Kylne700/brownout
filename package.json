@@ -1,0 +1,11 @@
+{
+  "name": "brownout",
+  "version": "0.1.0",
+  "description": "Network storms for web apps: Kane CLI finds what breaks, a coding agent fixes it, in a closed loop.",
+  "type": "module",
+  "bin": { "brownout": "bin/brownout.mjs" },
+  "scripts": { "test": "node --test" },
+  "engines": { "node": ">=20" },
+  "license": "MIT",
+  "dependencies": { "@testmuai/kane-cli": "0.10.4" }
+}

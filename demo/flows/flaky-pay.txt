@@ -1,0 +1,1 @@
+Navigate to {{BASE}} then click the button 'Add mug to cart', type '123 Main St' in the 'Shipping address' field, click 'Continue', click 'Pay now', wait up to 20 seconds, and verify the page shows the text 'Order confirmed'. If the page shows an error instead, report that the purchase failed.

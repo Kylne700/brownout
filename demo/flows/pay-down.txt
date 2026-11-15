@@ -1,0 +1,1 @@
+Navigate to {{BASE}} then click the button 'Add mug to cart', type '123 Main St' in the 'Shipping address' field, click 'Continue', click 'Pay now' and wait up to 30 seconds. Verify ALL of these: the page never shows 'Order confirmed'; the page shows a message containing 'payment is unavailable'; the page still lists 'Mug' in the cart. If any of these is false, report a failure.
