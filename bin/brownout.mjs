@@ -6,7 +6,7 @@ import { parseArgs } from 'node:util';
 import { runLadder, loadStorms } from '../lib/loop.mjs';
 import { writeReport } from '../lib/report.mjs';
 import { makeUi, bold, green } from '../lib/ui.mjs';
-import { balance, defaultPrefix } from '../lib/kane.mjs';
+import { defaultPrefix } from '../lib/kane.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const usage = `brownout run  --app "<start cmd>" [--app-dir d] [--app-port 18751] [--port 18750] --flows <dir> --storms <file>
@@ -36,11 +36,8 @@ fs.mkdirSync(cfg.runDir, { recursive: true });
 
 const storms = loadStorms(cfg.storms).filter((s) => !cfg.only || s.name === cfg.only);
 console.log(bold('BROWNOUT') + `  ${storms.length} storms  run folder: ${cfg.runDir}`);
-const bal0 = balance(cfg.kanePrefix).trim().split('\n').slice(0, 3).join(' | ');
-console.log(`kane balance before: ${bal0}`);
 const res = await runLadder(cfg, makeUi(storms));
 const { md, totals } = writeReport(res, cfg.runDir);
 console.log('\n' + md.split('\n').slice(2, 5).join('\n'));
 console.log(green('report: ') + path.join(cfg.runDir, 'REPORT.md'));
-console.log(`kane balance after: ${balance(cfg.kanePrefix).trim().split('\n').slice(0, 3).join(' | ')}`);
 process.exit(totals.fixed === totals.total ? 0 : 1);
