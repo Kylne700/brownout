@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { createProxy, callMatcher, HTML_ERROR } from '../lib/proxy.mjs';
-import { parseNdjson } from '../lib/kane.mjs';
+import { parseNdjson, kaneArgs } from '../lib/kane.mjs';
 import { buildEvidence, buildPrompt, describeFault, readFaultLog } from '../lib/evidence.mjs';
 import { runVerify, join } from '../lib/verify.mjs';
 import { parseAgentJson } from '../lib/agent.mjs';
@@ -118,4 +118,10 @@ test('evidence carries the verify result into the prompt', () => {
   const ev = buildEvidence({ storm: { name: 'x', expect: 'one order' }, kane, faults: [], flow: 'F', tryNo: 1, verify: { ok: false, code: 1, out: 'app holds 2 order(s), expected 1' } });
   const p = buildPrompt(ev, '/app');
   assert.ok(p.includes('FAILED') && p.includes('app holds 2 order(s)') && p.includes('Kane saw nothing wrong'));
+});
+
+test('kaneArgs: headless by default, headed only with BROWNOUT_HEADED=1', () => {
+  const o = { objective: 'o', url: 'u' };
+  assert.ok(kaneArgs(o, {}).includes('--headless'));
+  assert.ok(kaneArgs(o, { BROWNOUT_HEADED: '1' }).every((a) => a !== '--headless'));
 });
