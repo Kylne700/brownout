@@ -3,6 +3,8 @@
 Seeded network storms for a local web app: Kane CLI drives a real browser through your user flow while a proxy breaks
 the network on exact call numbers. When Kane sees the user hurt, a coding agent (Claude Code) patches the app and Kane runs again.
 
+Demo video (1:57): https://youtu.be/cgvqlY3akaQ
+
 ## The 20-second version
 Storm "lost-response": `POST /api/pay` reaches the shop, the shop saves the order, and the proxy drops the answer.
 The user clicks "Pay now" again. In the demo shop this happened (from `evidence/s2-clean/` of the real run below):
