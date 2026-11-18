@@ -1,0 +1,442 @@
+{
+  "startedAt": "2026-11-15T14:56:23.389Z",
+  "storms": [
+    {
+      "name": "flaky-pay",
+      "title": "payment endpoint fails twice, then works",
+      "expect": "When POST /api/pay fails with a temporary error (HTTP 503) the app must retry with backoff (at least 3 attempts) and finish the purchase. The user must end on the text \"Order confirmed\".",
+      "baseline": {
+        "status": "failed",
+        "green": false,
+        "reason": "Checkpoint assertion failed: \"the page shows the text 'Order confirmed'\"",
+        "credits": 22.6077725,
+        "seconds": 93.093,
+        "truth": {
+          "ok": false,
+          "code": 1,
+          "out": "app holds 0 order(s), expected 1"
+        },
+        "disagree": false,
+        "fault": [
+          "POST /api/pay #1 status:503"
+        ]
+      },
+      "tries": [
+        {
+          "status": "failed",
+          "green": false,
+          "reason": "Checkpoint assertion failed: \"the page shows the text 'Order confirmed'\"",
+          "credits": 22.937407499999996,
+          "seconds": 91.526,
+          "truth": {
+            "ok": false,
+            "code": 1,
+            "out": "app holds 0 order(s), expected 1"
+          },
+          "disagree": false,
+          "fault": [
+            "POST /api/pay #1 status:503"
+          ],
+          "n": 1,
+          "agent": {
+            "wall": 8.304,
+            "exitCode": 0,
+            "message": "I changed `pay()` in `demo/shop/server.mjs` to retry `POST /api/pay` on a 503, up to 5 attempts with exponential backoff (300 ms, 600 ms, and so on). It shows \"Order confirmed\" once a retry succeeds, and \"Payment failed\" if every attempt fails. I haven't run the tests or the Kane journey.",
+            "turns": 4,
+            "tokensIn": 29512,
+            "tokensOut": 683
+          },
+          "files": [
+            "server.mjs"
+          ]
+        },
+        {
+          "status": "passed",
+          "green": true,
+          "reason": "Objective completed",
+          "credits": 20.042296000000004,
+          "seconds": 99.923,
+          "truth": {
+            "ok": true,
+            "code": 0,
+            "out": "app holds 1 order(s), expected 1"
+          },
+          "disagree": false,
+          "fault": [
+            "POST /api/pay #1 status:503",
+            "POST /api/pay #2 status:503"
+          ],
+          "n": 2
+        }
+      ],
+      "final": "green",
+      "verify": {
+        "status": "passed",
+        "green": true,
+        "reason": "Objective completed",
+        "credits": 19.875635999999993,
+        "seconds": 96.713,
+        "truth": {
+          "ok": true,
+          "code": 0,
+          "out": "app holds 1 order(s), expected 1"
+        },
+        "disagree": false,
+        "fault": [
+          "POST /api/pay #1 status:503",
+          "POST /api/pay #2 status:503"
+        ]
+      }
+    },
+    {
+      "name": "lost-response",
+      "title": "payment goes through but the answer never arrives",
+      "expect": "When POST /api/pay is processed by the server but the response is lost, a retry or a second click must never create a second order. Use an idempotency key: the browser sends one key per purchase (header Idempotency-Key) and the server returns the same order for the same key. The user must see \"Order confirmed\" and the orders page must show exactly \"Orders: 1\".",
+      "baseline": {
+        "status": "failed",
+        "green": false,
+        "reason": "Checkpoint assertion failed: \"Verify the page shows exactly the text 'Orders: 1'\"",
+        "credits": 34.07624,
+        "seconds": 154.667,
+        "truth": {
+          "ok": false,
+          "code": 1,
+          "out": "app holds 2 order(s), expected 1"
+        },
+        "disagree": false,
+        "fault": [
+          "POST /api/pay #1 drop-after-upstream"
+        ]
+      },
+      "tries": [
+        {
+          "status": "failed",
+          "green": false,
+          "reason": "Checkpoint assertion failed: \"the page shows exactly the text 'Orders: 1'\"",
+          "credits": 31.079845000000002,
+          "seconds": 132.506,
+          "truth": {
+            "ok": false,
+            "code": 1,
+            "out": "app holds 2 order(s), expected 1"
+          },
+          "disagree": false,
+          "fault": [
+            "POST /api/pay #1 drop-after-upstream"
+          ],
+          "n": 1,
+          "agent": {
+            "wall": 12.799,
+            "exitCode": 0,
+            "message": "I changed `demo/shop/server.mjs` so each purchase sends one `Idempotency-Key` header with `/api/pay`, and the server now returns the same order for a repeated key instead of creating a second one. The browser also retries `/api/pay` when the connection drops, using the same key. I haven't run the shop or the storm test, so this is untested.",
+            "turns": 7,
+            "tokensIn": 30715,
+            "tokensOut": 1381
+          },
+          "files": [
+            "server.mjs"
+          ]
+        },
+        {
+          "status": "passed",
+          "green": true,
+          "reason": "Objective completed",
+          "credits": 30.4684775,
+          "seconds": 124.176,
+          "truth": {
+            "ok": true,
+            "code": 0,
+            "out": "app holds 1 order(s), expected 1"
+          },
+          "disagree": false,
+          "fault": [
+            "POST /api/pay #1 drop-after-upstream"
+          ],
+          "n": 2
+        }
+      ],
+      "final": "green",
+      "verify": {
+        "status": "passed",
+        "green": true,
+        "reason": "Objective completed",
+        "credits": 27.785239999999998,
+        "seconds": 125.291,
+        "truth": {
+          "ok": true,
+          "code": 0,
+          "out": "app holds 1 order(s), expected 1"
+        },
+        "disagree": false,
+        "fault": [
+          "POST /api/pay #1 drop-after-upstream"
+        ]
+      }
+    },
+    {
+      "name": "pay-down",
+      "title": "payment is down for good",
+      "expect": "When POST /api/pay keeps failing, the app must show a clear message that contains the words \"payment is unavailable\", must keep the item in the cart (the cart still lists the Mug), and must never show \"Order confirmed\".",
+      "baseline": {
+        "status": "failed",
+        "green": false,
+        "reason": "Checkpoint assertion failed: \"a message containing the words 'payment is unavailable' is visible\"",
+        "credits": 23.713477500000003,
+        "seconds": 104.335,
+        "truth": {
+          "ok": true,
+          "code": 0,
+          "out": "app holds 0 order(s), expected 0"
+        },
+        "disagree": true,
+        "fault": [
+          "POST /api/pay #1 status:503"
+        ]
+      },
+      "tries": [
+        {
+          "status": "failed",
+          "green": false,
+          "reason": "Checkpoint assertion failed: \"a message containing the words 'payment is unavailable' is visible; the item 'Mug' is still listed in the cart\"",
+          "credits": 23.4050325,
+          "seconds": 406.546,
+          "truth": {
+            "ok": true,
+            "code": 0,
+            "out": "app holds 0 order(s), expected 0"
+          },
+          "disagree": true,
+          "fault": [
+            "POST /api/pay #1 status:503",
+            "POST /api/pay #2 status:503",
+            "POST /api/pay #3 status:503",
+            "POST /api/pay #4 status:503",
+            "POST /api/pay #5 status:503"
+          ],
+          "n": 1,
+          "agent": {
+            "wall": 7.115,
+            "exitCode": 0,
+            "message": "I changed the failed-payment handler in `demo/shop/server.mjs`. It no longer empties the cart, and it now shows \"Sorry, payment is unavailable right now. Your cart is saved; please try again.\" I haven't run the Kane test or a no-fault purchase. The success path wasn't touched, so it should still end with \"Order confirmed\".",
+            "turns": 4,
+            "tokensIn": 30299,
+            "tokensOut": 459
+          },
+          "files": [
+            "server.mjs"
+          ]
+        },
+        {
+          "status": "passed",
+          "green": true,
+          "reason": "Objective completed",
+          "credits": 19.1813375,
+          "seconds": 93.683,
+          "truth": {
+            "ok": true,
+            "code": 0,
+            "out": "app holds 0 order(s), expected 0"
+          },
+          "disagree": false,
+          "fault": [
+            "POST /api/pay #1 status:503",
+            "POST /api/pay #2 status:503",
+            "POST /api/pay #3 status:503",
+            "POST /api/pay #4 status:503",
+            "POST /api/pay #5 status:503"
+          ],
+          "n": 2
+        }
+      ],
+      "final": "green",
+      "verify": {
+        "status": "passed",
+        "green": true,
+        "reason": "Objective completed",
+        "credits": 20.575295,
+        "seconds": 81.294,
+        "truth": {
+          "ok": true,
+          "code": 0,
+          "out": "app holds 0 order(s), expected 0"
+        },
+        "disagree": false,
+        "fault": [
+          "POST /api/pay #1 status:503",
+          "POST /api/pay #2 status:503",
+          "POST /api/pay #3 status:503",
+          "POST /api/pay #4 status:503",
+          "POST /api/pay #5 status:503"
+        ]
+      }
+    },
+    {
+      "name": "slow-cart",
+      "title": "cart answers after 12 seconds",
+      "expect": "When GET /api/cart is slow, the checkout page must never be blank. It must show a loading text (\"Loading your cart\") while it waits, and when the cart fails or times out it must show a message and a \"Try again\" button. When the cart arrives it must list the Mug.",
+      "baseline": {
+        "status": "failed",
+        "green": false,
+        "reason": "Checkpoint assertion failed: \"the page is never blank: it must show either the text 'Loading your cart', or the cart listing 'Mug', or an error message with a 'Try again' button\"",
+        "credits": 27.3194275,
+        "seconds": 88.85,
+        "truth": null,
+        "disagree": false,
+        "fault": [
+          "GET /api/cart #1 delay:12000"
+        ]
+      },
+      "tries": [
+        {
+          "status": "failed",
+          "green": false,
+          "reason": "Checkpoint assertion failed: \"The page is never blank: it must show either the text 'Loading your cart', the cart listing 'Mug', or an error message with a 'Try again' button.\"",
+          "credits": 26.952323,
+          "seconds": 96.683,
+          "truth": null,
+          "disagree": false,
+          "fault": [
+            "GET /api/cart #1 delay:12000"
+          ],
+          "n": 1,
+          "agent": {
+            "wall": 8.902,
+            "exitCode": 0,
+            "message": "I changed the shop's `checkout()` in `demo/shop/server.mjs`, not the Kane flow, since you said not to edit flows. It now shows \"Loading your cart\" while it waits. If the cart request fails or times out after 8 seconds, it shows an error message and a \"Try again\" button that re-runs the load. I haven't run the shop or the Kane flow, so none of this is tested, including that a purchase with no fault",
+            "turns": 4,
+            "tokensIn": 30428,
+            "tokensOut": 778
+          },
+          "files": [
+            "server.mjs"
+          ]
+        },
+        {
+          "status": "failed",
+          "green": false,
+          "reason": "Child agent failed: Final verification failed: \"the page lists 'Mug'\"",
+          "credits": 39.7244275,
+          "seconds": 371.731,
+          "truth": null,
+          "disagree": false,
+          "fault": [
+            "GET /api/cart #1 delay:12000",
+            "GET /api/cart #2 delay:12000"
+          ],
+          "n": 2,
+          "agent": {
+            "wall": 10.441,
+            "exitCode": 0,
+            "message": "I raised the cart fetch timeout in `server.mjs` from 8s to 16s, so a cart held for 12s now loads and lists the Mug instead of timing out. I haven't run the test or the no-fault purchase, so neither is checked.\n\nThe \"Loading your cart\" text and the \"Try again\" button on failure are unchanged. The agent's instruction to click \"Try again\" once and wait up to 20 seconds is in the flow, which I didn't ",
+            "turns": 4,
+            "tokensIn": 30573,
+            "tokensOut": 875
+          },
+          "files": [
+            "server.mjs"
+          ]
+        },
+        {
+          "status": "passed",
+          "green": true,
+          "reason": "Objective completed",
+          "credits": 20.769837999999996,
+          "seconds": 96.842,
+          "truth": null,
+          "disagree": false,
+          "fault": [
+            "GET /api/cart #1 delay:12000"
+          ],
+          "n": 3
+        }
+      ],
+      "final": "green",
+      "verify": {
+        "status": "passed",
+        "green": true,
+        "reason": "Objective completed",
+        "credits": 20.784343000000003,
+        "seconds": 115.274,
+        "truth": null,
+        "disagree": false,
+        "fault": [
+          "GET /api/cart #1 delay:12000"
+        ]
+      }
+    },
+    {
+      "name": "html-error",
+      "title": "product list answers with an HTML error page",
+      "expect": "When GET /api/products answers 200 with an HTML error page instead of JSON (every time), the page must not be blank. It must show a readable error message (for example \"Could not load the shop\") and a \"Reload\" button that fetches the products again.",
+      "baseline": {
+        "status": "failed",
+        "green": false,
+        "reason": "Checkpoint assertion failed: \"the page shows at least one visible heading, line of text or button\"",
+        "credits": 10.57861,
+        "seconds": 50.73,
+        "truth": null,
+        "disagree": false,
+        "fault": [
+          "GET /api/products #1 body:html-error",
+          "GET /api/products #2 body:html-error"
+        ]
+      },
+      "tries": [
+        {
+          "status": "failed",
+          "green": false,
+          "reason": "After 10 seconds, the page has no visible content, indicating a completely white page.",
+          "credits": 9.0305125,
+          "seconds": 48.301,
+          "truth": null,
+          "disagree": false,
+          "fault": [
+            "GET /api/products #1 body:html-error",
+            "GET /api/products #2 body:html-error"
+          ],
+          "n": 1,
+          "agent": {
+            "wall": 7.539,
+            "exitCode": 0,
+            "message": "I changed `boot()` in `demo/shop/server.mjs` so a failed or non-JSON `/api/products` response shows \"Could not load the shop\" and a \"Reload\" button that calls `boot()` again. I haven't run the browser test or a no-fault purchase. The success path is unchanged, so a purchase should still end with \"Order confirmed\".",
+            "turns": 4,
+            "tokensIn": 29833,
+            "tokensOut": 597
+          },
+          "files": [
+            "server.mjs"
+          ]
+        },
+        {
+          "status": "passed",
+          "green": true,
+          "reason": "Objective completed",
+          "credits": 11.946795,
+          "seconds": 48.481,
+          "truth": null,
+          "disagree": false,
+          "fault": [
+            "GET /api/products #1 body:html-error",
+            "GET /api/products #2 body:html-error"
+          ],
+          "n": 2
+        }
+      ],
+      "final": "green",
+      "verify": {
+        "status": "passed",
+        "green": true,
+        "reason": "Objective completed",
+        "credits": 13.489904999999998,
+        "seconds": 54.149,
+        "truth": null,
+        "disagree": false,
+        "fault": [
+          "GET /api/products #1 body:html-error",
+          "GET /api/products #2 body:html-error"
+        ]
+      }
+    }
+  ],
+  "endedAt": "2026-11-15T15:40:18.049Z"
+}

@@ -5,7 +5,7 @@ the network on exact call numbers. When Kane sees the user hurt, a coding agent 
 
 ## The 20-second version
 Storm "lost-response": `POST /api/pay` reaches the shop, the shop saves the order, and the proxy drops the answer.
-The user clicks "Pay now" again. In the demo shop this happened (from `runs/` of the real run below):
+The user clicks "Pay now" again. In the demo shop this happened (from `evidence/s2-clean/` of the real run below):
 
 - Kane (browser): red, `Checkpoint assertion failed: "Verify the page shows exactly the text 'Orders: 1'"`
 - The app itself, asked by a `verify` command after the run: `app holds 2 order(s), expected 1`. That is a double charge, and it is
@@ -18,6 +18,8 @@ global install also works), and Claude Code (`claude`) for the fixing agent.
 
     npx github:Kylne700/brownout demo --only lost-response --no-baseline --no-final   # one storm, about 2-3 Kane runs
     npx github:Kylne700/brownout demo --reset                                         # all 5 storms, the full run
+
+Kane signup is free at testmuai.com (the free credits cover a full demo). To see the app headed in a visible browser, set `BROWNOUT_HEADED=1`.
 
 `demo` copies the naive shop to `./brownout-demo-shop` (the agent edits that copy, never the package) and writes
 `./runs/<time>/REPORT.md`, `report.html`, `result.json`. Kane traffic goes through `mullvad-exclude` when that binary exists
@@ -62,6 +64,8 @@ A flow is plain English for Kane, `{{BASE}}` is the proxy URL (`demo/flows/lost-
 6. `--final` runs every storm once more on the fixed app; the report counts that pass.
 
 ## Real run (clean, one continuous `demo --reset`, naive shop, 2026-11-15)
+The full record (`REPORT.md`, `report.html`, `result.json`) is in [`evidence/s2-clean/`](evidence/s2-clean/): open `report.html` to see it with no Kane login and no credits.
+
 | Measured | Value |
 |---|---|
 | Storms survived, naive -> fixed | 0/5 -> 5/5 |
@@ -70,6 +74,7 @@ A flow is plain English for Kane, `{{BASE}}` is the proxy URL (`demo/flows/lost-
 | Kane runs | 21 (5 naive, 11 in the loop, 5 final) |
 | Kane credits (sum of the runs' own counts) | 476.3 |
 | Wall time | 43.9 minutes |
+| Agent time | 55 s in total |
 | Tries until green | flaky-pay 2, lost-response 2, pay-down 2, slow-cart 3, html-error 2 |
 
 Ground truth from the `verify` commands on the naive app: flaky-pay 0 orders (expected 1), lost-response 2 orders (expected 1),
@@ -84,7 +89,7 @@ fixed app all three say ok. slow-cart and html-error have no `verify` command: K
 - Claude Code refuses to edit files under a `.claude` folder ("sensitive file"). Run your app outside such a folder; in our npx test inside one, the agent was denied three times and the storm stayed red.
 - The proxy sees plain HTTP to one app port. No HTTPS, no websockets, no other fault types than the four above.
 - The agent fixes what the evidence shows. It can fix the wrong thing; the next Kane run decides, not the agent.
-- `npm test` (11 tests) needs no credits and no Kane login.
+- `npm test` (12 tests) needs no credits and no Kane login.
 
 ## AI disclosure
 The fixing agent in the loop is Claude Code (headless, Sonnet, file tools only, no shell). This repo was written with Claude Code
